@@ -29,7 +29,7 @@ int main()
 
   while (true)
   {
-    std::cout << "$";
+    std::cout << "$ ";
     std::getline(std::cin, input);
     input = strip(input, input.size());
 
