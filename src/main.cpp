@@ -29,6 +29,17 @@ std::string strip(std::string str, bool leading = true, bool trailing = true)
   return str.substr(start, end - start + 1);
 }
 
+std::string commandType(std::string str)
+{
+  std::string command_list[] = {"type", "exit", "echo"};
+  for (std::string command : command_list)
+  {
+    if (command == str)
+      return " is a shell builtin";
+  }
+  return ": not found";
+}
+
 int main()
 {
 
@@ -44,7 +55,7 @@ int main()
     std::getline(std::cin, input);
     input = strip(input, true, false);
 
-    if (input.size() == 0)
+    if (input.empty())
       break;
 
     if (input == "exit 0")
@@ -56,6 +67,12 @@ int main()
     if (input.substr(0, 5) == "echo ")
     {
       std::cout << input.substr(5) << std::endl;
+      continue;
+    }
+    if (input.substr(0, 5) == "type ")
+    {
+      std::string command_type = commandType(input.substr(5));
+      std::cout << input.substr(5) << command_type << std::endl;
       continue;
     }
 
