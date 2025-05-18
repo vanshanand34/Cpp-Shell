@@ -35,6 +35,9 @@ int main()
 
     if (input.size() == 0)
       break;
+    
+    if (input == "exit 0") 
+      return 0;
 
     std::cout << input << ": command not found" << std::endl;
   }
