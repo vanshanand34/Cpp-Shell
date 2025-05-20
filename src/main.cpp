@@ -61,15 +61,15 @@ std::string findFileinDir(char *directory_paths, std::string input)
 
   for (std::string path : paths)
   {
-    std::cout << "path - " << path << std::endl;
+    // std::cout << "path - " << path << std::endl;
     for (const auto &entry : fs::directory_iterator(path))
     {
-      std::cout << "entry: " << entry.path().string() << std::endl;
+      // std::cout << "entry: " << entry.path().string() << std::endl;
       if (entry.path().stem() == input)
       {
         std::string parent_path = entry.path().parent_path().string();
         std::string filename = entry.path().stem().string();
-        return parent_path + "\\" + filename;
+        return parent_path + "/" + filename;
       }
     }
   }
