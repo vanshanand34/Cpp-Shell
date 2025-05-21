@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 namespace fs = std::filesystem;
 
@@ -61,10 +62,8 @@ std::string findFileinDir(char *directory_paths, std::string input)
 
   for (std::string path : paths)
   {
-    // std::cout << "path - " << path << std::endl;
     for (const auto &entry : fs::directory_iterator(path))
     {
-      // std::cout << "entry: " << entry.path().string() << std::endl;
       if (entry.path().stem() == input)
       {
         std::string parent_path = entry.path().parent_path().string();
@@ -76,61 +75,98 @@ std::string findFileinDir(char *directory_paths, std::string input)
   return "";
 }
 
+void handleTypeCmd(std::string input, char *directory_paths)
+{
+  try
+  {
+    std::string command = input.substr(5);
+
+    // First check if it is a shell builtin
+    std::string command_type = commandType(command);
+
+    if (command_type != ": not found")
+    {
+      std::cout << command << command_type << std::endl;
+      return;
+    }
+
+    std::string file_path = findFileinDir(directory_paths, input.substr(5));
+    std::cout << file_path << std::endl;
+    if (file_path != "")
+    {
+      std::cout << command << " is " << file_path << std::endl;
+      return;
+    }
+
+    std::cout << command << command_type << std::endl;
+    return;
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+  }
+}
+
 int main()
 {
-
-  // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
-
-  char *directory_paths = getenv("PATH");
-
-  std::string input = "input";
-
-  while (true)
+  try
   {
-    std::cout << "$ ";
-    std::getline(std::cin, input);
-    input = strip(input, true, false);
 
-    if (input.empty())
-      break;
+    // Flush after every std::cout / std:cerr
+    std::cout << std::unitbuf;
+    std::cerr << std::unitbuf;
 
-    if (input == "exit 0")
-      return 0;
+    char *directory_paths = getenv("PATH");
 
-    if (input == "echo")
-      continue;
+    std::string input = "input";
 
-    if (input.starts_with("echo"))
+    while (true)
     {
-      std::cout << input.substr(5) << std::endl;
-      continue;
-    }
-    if (input.substr(0, 5) == "type ")
-    {
-      std::string command = input.substr(5);
+      std::cout << "$ ";
+      std::getline(std::cin, input);
+      input = strip(input, true, false);
 
-      // First check if it is a shell builtin
-      std::string command_type = commandType(command);
-      if (command_type != ": not found")
+      if (input.empty())
+        break;
+
+      if (input == "exit 0")
+        return 0;
+
+      if (input == "echo")
+        continue;
+
+      if (input.starts_with("echo"))
       {
-        std::cout << command << command_type << std::endl;
+        std::cout << input.substr(5) << std::endl;
         continue;
       }
 
-      std::string file_path = findFileinDir(directory_paths, input.substr(5));
+      if (input.substr(0, 5) == "type ")
+      {
+        handleTypeCmd(input, directory_paths);
+        continue;
+      }
+
+      // Check for executable files
+      std::vector<std::string> arguments = split(input, ' ');
+      std::string cmd = arguments[0];
+      std::string file_path = findFileinDir(directory_paths, cmd);
+
       if (file_path != "")
       {
-        std::cout << command << " is " << file_path << std::endl;
+        // Execute the file
+        // std::cout << "Executing " << file_path << std::endl;
+        int output = system((file_path + input.substr(cmd.size())).c_str());
+        // std::cout << output << std::endl;
         continue;
       }
 
-      std::cout << command << command_type << std::endl;
-      continue;
+      std::cout << input << ": command not found" << std::endl;
     }
-
-    std::cout << input << ": command not found" << std::endl;
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
   }
 
   return 0;
