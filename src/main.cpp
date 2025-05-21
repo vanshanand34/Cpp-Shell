@@ -91,7 +91,7 @@ void handleTypeCmd(std::string input, char *directory_paths)
     }
 
     std::string file_path = findFileinDir(directory_paths, input.substr(5));
-    std::cout << file_path << std::endl;
+
     if (file_path != "")
     {
       std::cout << command << " is " << file_path << std::endl;
@@ -155,8 +155,7 @@ int main()
       if (file_path != "")
       {
         // Execute the file
-        // std::cout << "Executing " << file_path << std::endl;
-        int output = system((file_path + input.substr(cmd.size())).c_str());
+        int output = system((cmd + input.substr(cmd.size())).c_str());
         // std::cout << output << std::endl;
         continue;
       }
