@@ -76,6 +76,7 @@ int main() {
     std::cerr << std::unitbuf;
 
     char *directory_paths = getenv("PATH");
+    char *home_path = getenv("HOME");
     std::string input = "input";
 
     while (true) {
@@ -123,7 +124,12 @@ int main() {
 
       if (cmd == "cd") {
         std::string destination_dir = input.substr(3);
+
+        if (destination_dir == "~")
+          destination_dir = home_path;
+
         int ans = chdir(destination_dir.c_str());
+
         if (ans != 0) {
           std::cout << "cd: " << destination_dir
                     << ": No such file or directory" << std::endl;
