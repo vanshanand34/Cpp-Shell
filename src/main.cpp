@@ -40,7 +40,7 @@ std::vector<std::string> split(std::string str, char delimiter) {
 }
 
 bool is_shell_builtin(std::string str) {
-  std::string command_list[] = {"type", "exit", "echo"};
+  std::string command_list[] = {"pwd", "type", "exit", "echo"};
   for (std::string command : command_list) {
     if (command == str)
       return true;
