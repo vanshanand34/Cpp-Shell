@@ -3,10 +3,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#ifdef _WIN32
 #include <direct.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace fs = std::filesystem;
-
 
 std::vector<std::string> split(std::string str, char delimiter) {
   std::stringstream ss(str);
@@ -122,7 +125,8 @@ int main() {
         std::string destination_dir = input.substr(3);
         int ans = chdir(destination_dir.c_str());
         if (ans != 0) {
-          std::cout << "cd: " << destination_dir << ": No such file or directory" << std::endl;
+          std::cout << "cd: " << destination_dir
+                    << ": No such file or directory" << std::endl;
         }
         continue;
       }
