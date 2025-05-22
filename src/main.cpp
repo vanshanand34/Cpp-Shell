@@ -3,30 +3,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <direct.h>
 
 namespace fs = std::filesystem;
 
-std::string strip(std::string str, bool leading = true, bool trailing = true) {
-
-  int n = str.size();
-  int start = 0;
-  int end = n - 1;
-
-  if (leading) {
-    while (start < n && str[start] == ' ')
-      start++;
-  }
-
-  if (trailing) {
-    while (end >= start && str[end] == ' ')
-      end--;
-  }
-
-  if (start > end)
-    return "";
-
-  return str.substr(start, end - start + 1);
-}
 
 std::vector<std::string> split(std::string str, char delimiter) {
   std::stringstream ss(str);
@@ -40,7 +20,7 @@ std::vector<std::string> split(std::string str, char delimiter) {
 }
 
 bool is_shell_builtin(std::string str) {
-  std::string command_list[] = {"pwd", "type", "exit", "echo"};
+  std::string command_list[] = {"pwd", "cd", "type", "exit", "echo"};
   for (std::string command : command_list) {
     if (command == str)
       return true;
@@ -98,7 +78,6 @@ int main() {
     while (true) {
       std::cout << "$ ";
       std::getline(std::cin, input);
-      input = strip(input, true, false);
       std::vector<std::string> tokens = split(input, ' ');
       std::string cmd = tokens[0];
 
@@ -136,6 +115,15 @@ int main() {
 
       if (cmd == "pwd") {
         std::cout << fs::current_path().string() << std::endl;
+        continue;
+      }
+
+      if (cmd == "cd") {
+        std::string destination_dir = input.substr(3);
+        int ans = chdir(destination_dir.c_str());
+        if (ans != 0) {
+          std::cout << "cd: " << destination_dir << ": No such file or directory" << std::endl;
+        }
         continue;
       }
 
