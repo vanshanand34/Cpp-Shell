@@ -126,7 +126,7 @@ int main() {
           std::cout << input.substr(5) << " is a shell builtin" << std::endl;
 
         else if (cmd_type == "invalid")
-          std::cout << cmd << ": not found" << std::endl;
+          std::cout << input.substr(5) << ": not found" << std::endl;
 
         else
           std::cout << input.substr(5) << " is " << cmd_type << std::endl;
