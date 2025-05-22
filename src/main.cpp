@@ -129,7 +129,7 @@ int main() {
           std::cout << cmd << ": not found" << std::endl;
 
         else
-          std::cout << cmd << " is " << cmd_type << std::endl;
+          std::cout << input.substr(5) << " is " << cmd_type << std::endl;
 
         continue;
       }
