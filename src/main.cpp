@@ -9,6 +9,8 @@
 #include <direct.h>
 #else
 #include <unistd.h>
+#define _pclose pclose
+#define _popen popen
 #endif
 
 namespace fs = std::filesystem;
