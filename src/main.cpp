@@ -150,7 +150,6 @@ int main() {
       if (input.empty())
         return 0;
 
-
       std::vector<std::string> tokens = split_with_quotes(input);
       std::string cmd = tokens[0];
 
@@ -162,17 +161,14 @@ int main() {
         if (tokens.size() == 1)
           continue;
 
-        if (input.contains('\'')) {
+        for (std::string token : tokens) {
 
-          for (std::string token : tokens) {
-            if (token == "echo")
-              continue;
-            std::cout << check_remove_quotes(token) << " ";
-          }
-          std::cout << std::endl;
-          continue;
+          if (token == "echo")
+            continue;
+
+          std::cout << check_remove_quotes(token) << " ";
         }
-        std::cout << input.substr(5) << std::endl;
+        std::cout << std::endl;
         continue;
       }
 
