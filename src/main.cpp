@@ -50,19 +50,35 @@ int shift_spaces(std::string &str, std::vector<std::string> &arguments,
     return index;
 }
 
+int process_quotes(std::string &curr_token, std::string &str,
+                   std::vector<std::string> &arguments, char quote, int i,
+                   int n) {
+
+    std::size_t closing_quote = str.find(std::string(1, quote), i + 1);
+    if (closing_quote == std::string::npos) {
+        curr_token += str[i];
+        return i;
+    }
+
+    if (curr_token != "") {
+        arguments.push_back(curr_token);
+    }
+
+    arguments.push_back(str.substr(i, closing_quote - i + 1));
+    curr_token = "";
+    i = shift_spaces(str, arguments, closing_quote + 1, n) - 1;
+    return i;
+}
+
 std::pair<std::string, std::vector<std::string>>
 split_with_quotes(std::string str) {
     std::vector<std::string> arguments;
     std::string curr_token = "";
     std::string command = "";
-    char single_quote = '\'';
-    char double_quote = '"';
-
     int index = 0, n = str.size();
 
-    while (index < n && str[index] != ' ') {
+    while (index < n && str[index] != ' ')
         index++;
-    }
 
     command = str.substr(0, index);
 
@@ -74,38 +90,13 @@ split_with_quotes(std::string str) {
 
     for (int i = 0; i < n; i++) {
 
-        // single quotes
-        if (str[i] == single_quote) {
+        if (str[i] == '\'') {
+            // single quote
+            i = process_quotes(curr_token, str, arguments, '\'', i, n);
 
-            std::size_t closing_quote = str.find("'", i + 1);
-            if (closing_quote == std::string::npos) {
-                curr_token += str[i];
-                continue;
-            }
-
-            if (curr_token != "") {
-                arguments.push_back(curr_token);
-            }
-
-            arguments.push_back(str.substr(i, closing_quote - i + 1));
-            curr_token = "";
-            i = shift_spaces(str, arguments, closing_quote + 1, n) - 1;
-
-        } else if (str[i] == double_quote) {
-
-            std::size_t closing_quote = str.find("\"", i + 1);
-            if (closing_quote == std::string::npos) {
-                curr_token += str[i];
-                continue;
-            }
-
-            if (curr_token != "") {
-                arguments.push_back(curr_token);
-            }
-
-            arguments.push_back(str.substr(i, closing_quote - i + 1));
-            curr_token = "";
-            i = shift_spaces(str, arguments, closing_quote + 1, n) - 1;
+        } else if (str[i] == '"') {
+            // double quote
+            i = process_quotes(curr_token, str, arguments, '"', i, n);
 
         } else if (str[i] == ' ') {
 
@@ -256,7 +247,8 @@ int main() {
             }
 
             if (cmd == "cd") {
-                if (arguments.size() < 1)   continue;
+                if (arguments.size() < 1)
+                    continue;
                 std::string destination_dir = input.substr(3);
 
                 if (destination_dir == "~")
