@@ -145,6 +145,9 @@ std::string get_type(std::string command, char *directory_paths) {
 void exec_cat_cmd(std::vector<std::string> file_names) {
   for (std::string &file_name : file_names) {
 
+    if (file_name == " " || file_name == "")
+      continue;
+
     std::string cmd = "cat " + file_name;
     FILE *fp = _popen(cmd.c_str(), "r");
 
