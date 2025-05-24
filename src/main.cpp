@@ -96,7 +96,7 @@ split_with_quotes(std::string str) {
 }
 
 bool is_shell_builtin(std::string str) {
-  std::string command_list[] = {"pwd", "cd", "type", "exit", "echo", "cat"};
+  std::string command_list[] = {"pwd", "cd", "type", "exit", "echo"};
   for (std::string command : command_list) {
     if (command == str)
       return true;
