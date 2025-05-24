@@ -214,11 +214,6 @@ int main() {
 
             auto [cmd, arguments] = split_with_quotes(input);
 
-            for (std::string token : arguments) {
-                std::cout << token << " ";
-            }
-            std::cout << std::endl;
-
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
 
