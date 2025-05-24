@@ -33,34 +33,66 @@ std::string check_remove_quotes(std::string &token) {
   return token;
 }
 
-std::vector<std::string> split_with_quotes(std::string str) {
-  std::vector<std::string> tokens;
+std::pair<std::string, std::vector<std::string>>
+split_with_quotes(std::string str) {
+  std::vector<std::string> arguments;
   std::string curr_token = "";
+  std::string command = "";
 
-  for (int i = 0; i < str.size(); i++) {
-    if ((str[i] == ' ' && curr_token[0] != '\'')) {
+  int index = 0, n = str.size();
 
-      if (curr_token != "")
-        tokens.push_back(curr_token);
+  while (index < n && str[index] != ' ') {
+    index++;
+  }
 
+  command = str.substr(0, index);
+
+  if (index == n)
+    return {command, arguments};
+
+  str = str.substr(index + 1);
+  n = str.size();
+
+  for (int i = 0; i < n; i++) {
+    if (str[i] == ' ' && curr_token[0] != '\'') {
+      if (curr_token == "")
+        continue;
+      arguments.push_back(curr_token);
       curr_token = "";
-      continue;
-    }
-    if (str[i] == '\'' && curr_token[0] == '\'') {
 
-      // curr_token = curr_token.substr(1, curr_token.size() - 1);
-      tokens.push_back(curr_token + '\'');
+      while (i < n && str[i] == ' ')
+        i++;
+
+      if (i == n)
+        break;
+
+      arguments.push_back(" ");
+      i--;
+
+    } else if (str[i] == '\'' && curr_token[0] == '\'') {
+      arguments.push_back(curr_token + "'");
       curr_token = "";
-      continue;
-    }
 
-    curr_token += str[i];
+      if (i == n - 1)
+        break;
+
+      if (str[i + 1] == ' ') {
+        arguments.push_back(" ");
+        i++;
+        while (i < n && str[i] == ' ')
+          i++;
+
+        i--;
+      }
+
+    } else {
+      curr_token += str[i];
+    }
   }
 
   if (curr_token != "")
-    tokens.push_back(curr_token);
-
-  return tokens;
+    arguments.push_back(curr_token);
+  return {command, arguments};
 }
 
 bool is_shell_builtin(std::string str) {
@@ -113,11 +145,7 @@ std::string get_type(std::string command, char *directory_paths) {
 void exec_cat_cmd(std::vector<std::string> file_names) {
   for (std::string &file_name : file_names) {
 
-    if (file_name == "cat")
-      continue;
-
     std::string cmd = "cat " + file_name;
-
     FILE *fp = _popen(cmd.c_str(), "r");
 
     if (fp == NULL) {
@@ -150,43 +178,42 @@ int main() {
       if (input.empty())
         return 0;
 
-      std::vector<std::string> tokens = split_with_quotes(input);
-      std::string cmd = tokens[0];
+      auto [cmd, arguments] = split_with_quotes(input);
 
-      if (input == "exit 0")
+      // std::cout << cmd << " " << arguments.size() << std::endl;
+      // for (std::string token : arguments)
+      //   std::cout << token << std::endl;
+
+      if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
         return 0;
 
       if (cmd == "echo") {
 
-        if (tokens.size() == 1)
+        if (arguments.size() == 0)
           continue;
 
-        for (std::string token : tokens) {
+        for (std::string token : arguments)
+          std::cout << check_remove_quotes(token);
 
-          if (token == "echo")
-            continue;
-
-          std::cout << check_remove_quotes(token) << " ";
-        }
         std::cout << std::endl;
         continue;
       }
 
       if (cmd == "type") {
 
-        if (tokens.size() == 1)
+        if (arguments.size() != 1)
           continue;
 
-        std::string cmd_type = get_type(input.substr(5), directory_paths);
+        std::string cmd_type = get_type(arguments[0], directory_paths);
 
         if (cmd_type == "builtin")
-          std::cout << input.substr(5) << " is a shell builtin" << std::endl;
+          std::cout << arguments[0] << " is a shell builtin" << std::endl;
 
         else if (cmd_type == "invalid")
-          std::cout << input.substr(5) << ": not found" << std::endl;
+          std::cout << arguments[0] << ": not found" << std::endl;
 
         else
-          std::cout << input.substr(5) << " is " << cmd_type << std::endl;
+          std::cout << arguments[0] << " is " << cmd_type << std::endl;
 
         continue;
       }
@@ -212,7 +239,7 @@ int main() {
       }
 
       if (cmd == "cat") {
-        exec_cat_cmd(tokens);
+        exec_cat_cmd(arguments);
         continue;
       }
 
