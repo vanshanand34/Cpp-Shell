@@ -107,6 +107,12 @@ split_with_quotes(std::string str) {
             i = shift_spaces(str, arguments, i, n) - 1;
 
         } else {
+            if (str[i] == '\\') {
+                if (i < n - 1)
+                    curr_token += str[i + 1];
+                i++;
+                continue;
+            }
             curr_token += str[i];
         }
     }
