@@ -54,17 +54,48 @@ int process_quotes(std::string &curr_token, std::string &str,
                    std::vector<std::string> &arguments, char quote, int i,
                    int n) {
 
-    std::size_t closing_quote = str.find(std::string(1, quote), i + 1);
-    if (closing_quote == std::string::npos) {
+    int closing_quote = -1;
+    int index = i + 1;
+    std::string temp_token = std::string(1, quote);
+    
+    // Preserve actual characters inside single quotes 
+    // and special meaning inside double quotes (backslash)
+    if (quote == '"') {
+        while (index < n) {
+            temp_token += str[index];
+            if (str[index] == quote && str[index - 1] != '\\') {
+                closing_quote = index;
+                break;
+            }
+            if (str[index] == '\\') {
+                if (index < n - 1) {
+                    temp_token.pop_back();
+                    temp_token += str[index + 1];
+                }
+                index++;
+            }
+            index++;
+        }
+    } else {
+        while (index < n) {
+            temp_token += str[index];
+            if (str[index] == quote) {
+                closing_quote = index;
+                break;
+            }
+            index++;
+        }
+    }
+
+    if (closing_quote == -1) {
         curr_token += str[i];
         return i;
     }
 
-    if (curr_token != "") {
+    if (curr_token != "")
         arguments.push_back(curr_token);
-    }
 
-    arguments.push_back(str.substr(i, closing_quote - i + 1));
+    arguments.push_back(temp_token);
     curr_token = "";
     i = shift_spaces(str, arguments, closing_quote + 1, n) - 1;
     return i;
