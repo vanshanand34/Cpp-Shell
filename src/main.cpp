@@ -63,7 +63,7 @@ int process_quotes(std::string &curr_token, std::string &str,
     if (quote == '"') {
         while (index < n) {
             temp_token += str[index];
-            if (str[index] == quote && str[index - 1] != '\\') {
+            if (str[index] == quote) {
                 closing_quote = index;
                 break;
             }
