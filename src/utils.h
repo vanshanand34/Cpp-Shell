@@ -139,6 +139,9 @@ pair<string, vector<string>> split_with_quotes(string str) {
             if (closing_quote_index != string::npos) {
                 curr_arg += str.substr(i, closing_quote_index - i + 1);
                 arguments.push_back(curr_arg);
+                if (closing_quote_index < n - 1 &&
+                    str[closing_quote_index + 1] == ' ')
+                    arguments.push_back(" ");
                 i = closing_quote_index;
                 curr_arg = "";
             } else {
@@ -149,13 +152,19 @@ pair<string, vector<string>> split_with_quotes(string str) {
                 process_double_quotes(str, i, n);
             if (closing_index != -1) {
                 arguments.push_back(processed_str);
+                if (i < n - 1 && str[i + 1] == ' ')
+                    arguments.push_back(" ");
                 i = closing_index;
                 curr_arg = "";
             } else {
                 curr_arg += str[i];
             }
         } else if (str[i] == ' ') {
+            if (curr_arg == "")
+                continue;
             arguments.push_back(curr_arg);
+            if (i < n - 1)
+                arguments.push_back(" ");
             curr_arg = "";
         } else if (str[i] == '\\') {
             curr_arg += str[++i];
