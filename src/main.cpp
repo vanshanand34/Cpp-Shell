@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 int main() {
     try {
         // Flush after every std::cout / std:cerr

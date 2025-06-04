@@ -36,77 +36,26 @@ string check_remove_quotes(string &token) {
     return token;
 }
 
-int shift_spaces(string &str, vector<string> &arguments, int index, int n) {
-
-    if (index == n || str[index] != ' ')
-        return index;
-
-    while (index < n && str[index] == ' ') {
-        index++;
-    }
-    // check if there are more arguments, if yes add a space
-    if (index < n) {
-        arguments.push_back(" ");
-    }
-
-    return index;
-}
-
-vector<bool> check_matching_quotes(string command_str, int n) {
-    stack<int> double_quotes;
-    stack<int> single_quotes;
-
-    vector<bool> quotes_match(n, false);
-
-    for (int i = 0; i < n; i++) {
-        if (command_str[i] == '\'') {
-            if (single_quotes.empty()) {
-                single_quotes.push(i);
-            } else {
-                quotes_match[single_quotes.top()] = true;
-                while (!double_quotes.empty() &&
-                       double_quotes.top() > single_quotes.top())
-                    double_quotes.pop();
-                single_quotes.pop();
-            }
-        } else if (command_str[i] == '"') {
-            if (double_quotes.empty()) {
-                double_quotes.push(i);
-            } else {
-                quotes_match[double_quotes.top()] = true;
-                while (!single_quotes.empty() &&
-                       single_quotes.top() > double_quotes.top())
-                    single_quotes.pop();
-                double_quotes.pop();
-            }
-        } else if (command_str[i] == '\\') {
-            if (!double_quotes.empty()) {
-                i++;
-            }
-        }
-    }
-    return quotes_match;
-}
-
-pair<int, string> process_double_quotes(string &raw_str, int index, int n) {
+pair<int, string> process_double_q_str(string &raw_str, int index, int n) {
 
     string processed_str = "\"";
 
     for (int i = index + 1; i < n; i++) {
 
         if (i < n - 1 && raw_str[i] == '\\') {
-            processed_str += raw_str[i + 1];
-            i++;
+            processed_str += raw_str[++i];
         } else if (raw_str[i] == '\'') {
-            size_t closing_nested_single = raw_str.find('\'', i + 1);
-            if (closing_nested_single != string::npos) {
-                string nested_single_quoted_str =
-                    raw_str.substr(i, closing_nested_single - i + 1);
-                processed_str += nested_single_quoted_str;
-                i = closing_nested_single;
-            } else {
+
+            size_t single_q_end = raw_str.find('\'', i + 1);
+
+            if (single_q_end == string::npos) {
                 processed_str += raw_str[i];
+                continue;
             }
+            string single_q_str = raw_str.substr(i, single_q_end - i + 1);
+            processed_str += single_q_str;
+            i = single_q_end;
+
         } else if (raw_str[i] == '"') {
             return {i, processed_str + '"'};
         } else {
@@ -116,56 +65,73 @@ pair<int, string> process_double_quotes(string &raw_str, int index, int n) {
     return {-1, ""};
 }
 
+void push_argument(string &curr_arg, string &str, vector<string> &arguments,
+                   int &closing_index, int n) {
+
+    arguments.push_back(curr_arg);
+
+    if (closing_index < n - 1 && str[closing_index + 1] == ' ')
+        arguments.push_back(" ");
+
+    curr_arg = "";
+}
+
 pair<string, vector<string>> split_with_quotes(string str) {
     vector<string> arguments;
     string command = "";
-    int index = 0, n = str.size();
+    int n = str.size();
 
-    while (index < n && str[index] != ' ')
-        index++;
+    int index = str.find(' ');
+    if (index == string::npos)
+        return {str, arguments};
 
     command = str.substr(0, index);
-
-    if (index == n)
-        return {command, arguments};
-
     str = str.substr(index + 1);
     n = str.size();
     string curr_arg = "";
 
     for (int i = 0; i < n; i++) {
+        // cout << i << " ";
         if (str[i] == '\'') {
-            size_t closing_quote_index = str.find('\'', i + 1);
-            if (closing_quote_index != string::npos) {
-                curr_arg += str.substr(i, closing_quote_index - i + 1);
-                arguments.push_back(curr_arg);
-                if (closing_quote_index < n - 1 &&
-                    str[closing_quote_index + 1] == ' ')
-                    arguments.push_back(" ");
-                i = closing_quote_index;
-                curr_arg = "";
-            } else {
+
+            int closing_quote_idx = str.find('\'', i + 1);
+
+            if (closing_quote_idx == string::npos) {
                 curr_arg += str[i];
+                continue;
             }
+
+            curr_arg += str.substr(i, closing_quote_idx - i + 1);
+            push_argument(curr_arg, str, arguments, closing_quote_idx, n);
+            i = closing_quote_idx;
+
         } else if (str[i] == '"') {
-            auto [closing_index, processed_str] =
-                process_double_quotes(str, i, n);
-            if (closing_index != -1) {
-                arguments.push_back(processed_str);
-                if (closing_index <  n - 1 && str[closing_index+ 1] == ' ')
-                    arguments.push_back(" ");
-                i = closing_index;
-                curr_arg = "";
-            } else {
+            // cout << " double "; 
+
+            auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
+
+            if (closing_idx == -1) {
                 curr_arg += str[i];
+                continue;
             }
+
+            push_argument(processed_str, str, arguments, closing_idx, n);
+
+            i = closing_idx;
+            curr_arg = "";
+
         } else if (str[i] == ' ') {
+
             if (curr_arg == "")
                 continue;
+
             arguments.push_back(curr_arg);
+
             if (i < n - 1)
                 arguments.push_back(" ");
+
             curr_arg = "";
+
         } else if (str[i] == '\\') {
             curr_arg += str[++i];
         } else {
@@ -258,5 +224,5 @@ void call_cat_cmd(string input_cmd) {
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
         cout << buffer;
     }
-     _pclose(fp);
+    _pclose(fp);
 }
