@@ -152,7 +152,7 @@ pair<string, vector<string>> split_with_quotes(string str) {
                 process_double_quotes(str, i, n);
             if (closing_index != -1) {
                 arguments.push_back(processed_str);
-                if (i < n - 1 && str[i + 1] == ' ')
+                if (closing_index <  n - 1 && str[closing_index+ 1] == ' ')
                     arguments.push_back(" ");
                 i = closing_index;
                 curr_arg = "";
@@ -258,5 +258,5 @@ void call_cat_cmd(string input_cmd) {
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
         cout << buffer;
     }
-    _pclose(fp);
+     _pclose(fp);
 }
