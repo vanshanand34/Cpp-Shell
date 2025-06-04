@@ -258,6 +258,5 @@ void call_cat_cmd(string input_cmd) {
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
         cout << buffer;
     }
-    cout << endl;
     _pclose(fp);
 }
