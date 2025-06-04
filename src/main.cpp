@@ -79,7 +79,7 @@ int main() {
             }
 
             if (cmd == "cat") {
-                exec_cat_cmd(arguments);
+                call_cat_cmd(input);
                 continue;
             }
 

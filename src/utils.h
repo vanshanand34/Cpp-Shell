@@ -246,3 +246,18 @@ void exec_cat_cmd(vector<string> file_names) {
         _pclose(fp);
     }
 }
+
+void call_cat_cmd(string input_cmd) {
+    FILE *fp = _popen(input_cmd.c_str(), "r");
+    if (fp == NULL) {
+        cerr << "error opening file : " << input_cmd << endl;
+        return;
+    }
+
+    char buffer[256];
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        cout << buffer;
+    }
+    cout << endl;
+    _pclose(fp);
+}
