@@ -76,9 +76,30 @@ void push_argument(string &curr_arg, string &str, vector<string> &arguments,
     curr_arg = "";
 }
 
+string get_command(string &input) {
+    string cmd = "";
+    int closing_idx = 0;
+
+    if (input[0] == '\'') {
+        closing_idx = input.find('\'', 1);
+    } else if (input[0] == '"') {
+        closing_idx = input.find('"', 1);
+    } else {
+        closing_idx = input.find(' ');
+    }
+
+    if (closing_idx == string::npos) {
+        closing_idx = input.size() - 1;
+    }
+
+    cmd = input.substr(0, closing_idx);
+    input = input.substr(closing_idx + 1);
+    return cmd;
+}
+
 pair<string, vector<string>> split_with_quotes(string str) {
     vector<string> arguments;
-    string command = "";
+    string command = get_command(str);
     int n = str.size();
     string curr_arg = "";
 
@@ -132,10 +153,6 @@ pair<string, vector<string>> split_with_quotes(string str) {
 
     if (curr_arg != "")
         arguments.push_back(curr_arg);
-
-    command = check_remove_quotes(arguments[0]);
-    arguments.erase(arguments.begin());
-    if (arguments[0] == " ")    arguments.erase(arguments.begin());
 
     return {command, arguments};
 }
