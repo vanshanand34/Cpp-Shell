@@ -80,20 +80,35 @@ string get_command(string &input) {
     string cmd = "";
     int closing_idx = 0;
 
-    if (input[0] == '\'') {
-        closing_idx = input.find('\'', 1);
-    } else if (input[0] == '"') {
-        closing_idx = input.find('"', 1);
+    if (input[0] == ' ') {
+        int idx = 0;
+        while (idx < input.size() && input[idx] == ' ')
+            idx++;
+        input = input.substr(idx);
+    }
+
+    int n = input.size();
+
+    if (input[0] == '\'' || input[0] == '"') {
+        closing_idx = input.find(input[0], 1);
+        if (closing_idx == string::npos) {
+            cmd = input;
+            input = "";
+            return cmd;
+        }
+        cmd = input.substr(1, closing_idx - 1);
+        input = input.substr(closing_idx + 1);
     } else {
         closing_idx = input.find(' ');
+        if (closing_idx == string::npos) {
+            cmd = input;
+            input = "";
+            return cmd;
+        }
+        cmd = input.substr(0, closing_idx);
+        input = input.substr(closing_idx + 1);
     }
 
-    if (closing_idx == string::npos) {
-        closing_idx = input.size() - 1;
-    }
-
-    cmd = input.substr(0, closing_idx);
-    input = input.substr(closing_idx + 1);
     return cmd;
 }
 
@@ -169,7 +184,7 @@ bool is_shell_builtin(string str) {
 string get_file_path(char *directory_paths, string input) {
     try {
         string curr_path = "";
-        vector<string> paths = split_args(directory_paths, ':');
+        vector<string> paths = split_args(directory_paths, ' ');
 
         for (string path : paths) {
             for (const auto &entry : fs::directory_iterator(path)) {
