@@ -80,18 +80,10 @@ pair<string, vector<string>> split_with_quotes(string str) {
     vector<string> arguments;
     string command = "";
     int n = str.size();
-
-    int index = str.find(' ');
-    if (index == string::npos)
-        return {str, arguments};
-
-    command = str.substr(0, index);
-    str = str.substr(index + 1);
-    n = str.size();
     string curr_arg = "";
 
     for (int i = 0; i < n; i++) {
-        // cout << i << " ";
+
         if (str[i] == '\'') {
 
             int closing_quote_idx = str.find('\'', i + 1);
@@ -106,7 +98,6 @@ pair<string, vector<string>> split_with_quotes(string str) {
             i = closing_quote_idx;
 
         } else if (str[i] == '"') {
-            // cout << " double "; 
 
             auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
 
@@ -141,6 +132,10 @@ pair<string, vector<string>> split_with_quotes(string str) {
 
     if (curr_arg != "")
         arguments.push_back(curr_arg);
+
+    command = check_remove_quotes(arguments[0]);
+    arguments.erase(arguments.begin());
+    if (arguments[0] == " ")    arguments.erase(arguments.begin());
 
     return {command, arguments};
 }
