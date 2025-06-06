@@ -96,7 +96,9 @@ string get_command(string &input) {
             input = "";
             return cmd;
         }
+
         cmd = input.substr(1, closing_idx - 1);
+        // if (cmd.find(' ') != string::npos)
         input = input.substr(closing_idx + 1);
     } else {
         closing_idx = input.find(' ');
@@ -196,9 +198,20 @@ string get_file_path(char *directory_paths, string input) {
             }
         }
     } catch (const exception &ex) {
-        cerr << ex.what() << endl;
+        cerr << "Exception in get_file_path: " << ex.what() << endl;
     }
     return "";
+}
+
+string join(vector<string> args, string sep) {
+    string res = "";
+    int n = args.size();
+    if (n == 0) return res;
+    for (int i = 0; i < n - 1; i++) {
+        res += args[i] + sep;
+    }
+    res += args[n - 1];
+    return res;
 }
 
 string get_type(string command, char *directory_paths) {

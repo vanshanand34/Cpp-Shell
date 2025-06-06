@@ -18,6 +18,10 @@ int main() {
                 return 0;
 
             auto [cmd, arguments] = split_with_quotes(input);
+            // cout << "commmand: " << cmd << " " << cmd.size() << endl;
+            // for (string s : arguments) {
+            //     cout << s << endl;
+            // }
 
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
@@ -87,14 +91,24 @@ int main() {
 
             if (file_path != "") {
                 // Execute the file
-                int output = system(input.c_str());
+                string processed_input =
+                    cmd.find(' ') != string::npos ? "\"" + cmd + "\"" : cmd;
+                if (arguments.size() > 0)
+                    processed_input =
+                        processed_input + " " +
+                        join(arguments,
+                             " "); // In case command in inside quotes
+                // cout << processed_input << endl;
+                int output = system(processed_input.c_str());
+                // if (output != 0)
+                //     cout << "Error executing file" << endl;
                 continue;
             }
 
             std::cout << input << ": command not found" << std::endl;
         }
     } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Exception in main: " << e.what() << std::endl;
     }
 
     return 0;
