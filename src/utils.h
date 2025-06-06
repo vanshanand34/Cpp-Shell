@@ -186,7 +186,7 @@ bool is_shell_builtin(string str) {
 string get_file_path(char *directory_paths, string input) {
     try {
         string curr_path = "";
-        vector<string> paths = split_args(directory_paths, ' ');
+        vector<string> paths = split_args(directory_paths, ':');
 
         for (string path : paths) {
             for (const auto &entry : fs::directory_iterator(path)) {
