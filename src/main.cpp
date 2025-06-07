@@ -86,7 +86,7 @@ int main() {
 
             // Check for executable files
             std::string file_path = get_file_path(directory_paths, cmd);
-            cout << cmd << endl;
+            // cout << cmd << endl;
             // cout << file_path << endl;
 
             if (file_path != "") {
