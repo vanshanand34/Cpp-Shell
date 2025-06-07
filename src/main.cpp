@@ -19,9 +19,7 @@ int main() {
 
             auto [cmd, arguments] = split_with_quotes(input);
             // cout << "commmand: " << cmd << " " << cmd.size() << endl;
-            // for (string s : arguments) {
-            //     cout << s << endl;
-            // }
+            // cout << arguments.size() << endl;
 
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
@@ -88,20 +86,13 @@ int main() {
 
             // Check for executable files
             std::string file_path = get_file_path(directory_paths, cmd);
+            cout << cmd << endl;
+            // cout << file_path << endl;
 
             if (file_path != "") {
                 // Execute the file
-                string processed_input =
-                    cmd.find(' ') != string::npos ? "\"" + cmd + "\"" : cmd;
-                if (arguments.size() > 0)
-                    processed_input =
-                        processed_input + " " +
-                        join(arguments,
-                             " "); // In case command in inside quotes
-                // cout << processed_input << endl;
+                string processed_input = process_exec_input(cmd, arguments);
                 int output = system(processed_input.c_str());
-                // if (output != 0)
-                //     cout << "Error executing file" << endl;
                 continue;
             }
 

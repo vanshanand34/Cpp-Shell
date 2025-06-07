@@ -189,7 +189,6 @@ string get_file_path(char *directory_paths, string input) {
         // cout << directory_paths << endl;
         vector<string> paths = split_args(directory_paths, ':');
 
-
         for (string path : paths) {
 
             if (!fs::exists(path))
@@ -272,4 +271,19 @@ void call_cat_cmd(string input_cmd) {
         cout << buffer;
     }
     _pclose(fp);
+}
+
+string process_exec_input(string cmd, vector<string> arguments) {
+    string p_input = cmd;
+    if (cmd.find(' ') != string::npos) {
+        if (cmd.find('"') != string::npos)
+            p_input = "'" + cmd + "'";
+        else
+            p_input = "\"" + cmd + "\"";
+    }
+
+    if (arguments.size() > 0)
+        p_input += " " + join(arguments, " ");
+
+    return p_input;
 }
