@@ -186,14 +186,20 @@ bool is_shell_builtin(string str) {
 string get_file_path(char *directory_paths, string input) {
     try {
         string curr_path = "";
+        // cout << directory_paths << endl;
         vector<string> paths = split_args(directory_paths, ':');
 
+
         for (string path : paths) {
+
+            if (!fs::exists(path))
+                continue;
+
             for (const auto &entry : fs::directory_iterator(path)) {
                 if (entry.path().stem() == input) {
-                    string parent_path = entry.path().parent_path().string();
-                    string filename = entry.path().stem().string();
-                    return parent_path + "/" + filename;
+                    fs::path parent_path = entry.path().parent_path();
+                    fs::path filename = entry.path().stem();
+                    return (parent_path / filename).string();
                 }
             }
         }
@@ -206,7 +212,8 @@ string get_file_path(char *directory_paths, string input) {
 string join(vector<string> args, string sep) {
     string res = "";
     int n = args.size();
-    if (n == 0) return res;
+    if (n == 0)
+        return res;
     for (int i = 0; i < n - 1; i++) {
         res += args[i] + sep;
     }
