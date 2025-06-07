@@ -124,6 +124,9 @@ pair<string, vector<string>> split_with_quotes(string str) {
 
         if (str[i] == '\'') {
 
+            if (curr_arg.size() > 0)
+                arguments.push_back(curr_arg);
+            curr_arg = "";
             int closing_quote_idx = str.find('\'', i + 1);
 
             if (closing_quote_idx == string::npos) {
@@ -136,6 +139,10 @@ pair<string, vector<string>> split_with_quotes(string str) {
             i = closing_quote_idx;
 
         } else if (str[i] == '"') {
+
+            if (curr_arg.size() > 0)
+                arguments.push_back(curr_arg);
+            curr_arg = "";
 
             auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
 
