@@ -76,22 +76,52 @@ void push_argument(string &curr_arg, string &str, vector<string> &arguments,
     curr_arg = "";
 }
 
+string get_command(string &input) {
+    string cmd = "";
+    int closing_idx = 0;
+
+    if (input[0] == ' ') {
+        int idx = 0;
+        while (idx < input.size() && input[idx] == ' ')
+            idx++;
+        input = input.substr(idx);
+    }
+
+    int n = input.size();
+
+    if (input[0] == '\'' || input[0] == '"') {
+        closing_idx = input.find(input[0], 1);
+        if (closing_idx == string::npos) {
+            cmd = input;
+            input = "";
+            return cmd;
+        }
+
+        cmd = input.substr(1, closing_idx - 1);
+        // if (cmd.find(' ') != string::npos)
+        input = input.substr(closing_idx + 1);
+    } else {
+        closing_idx = input.find(' ');
+        if (closing_idx == string::npos) {
+            cmd = input;
+            input = "";
+            return cmd;
+        }
+        cmd = input.substr(0, closing_idx);
+        input = input.substr(closing_idx + 1);
+    }
+
+    return cmd;
+}
+
 pair<string, vector<string>> split_with_quotes(string str) {
     vector<string> arguments;
-    string command = "";
+    string command = get_command(str);
     int n = str.size();
-
-    int index = str.find(' ');
-    if (index == string::npos)
-        return {str, arguments};
-
-    command = str.substr(0, index);
-    str = str.substr(index + 1);
-    n = str.size();
     string curr_arg = "";
 
     for (int i = 0; i < n; i++) {
-        // cout << i << " ";
+
         if (str[i] == '\'') {
 
             int closing_quote_idx = str.find('\'', i + 1);
@@ -106,7 +136,6 @@ pair<string, vector<string>> split_with_quotes(string str) {
             i = closing_quote_idx;
 
         } else if (str[i] == '"') {
-            // cout << " double "; 
 
             auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
 
@@ -157,21 +186,38 @@ bool is_shell_builtin(string str) {
 string get_file_path(char *directory_paths, string input) {
     try {
         string curr_path = "";
+        // cout << directory_paths << endl;
         vector<string> paths = split_args(directory_paths, ':');
 
         for (string path : paths) {
+
+            if (!fs::exists(path))
+                continue;
+
             for (const auto &entry : fs::directory_iterator(path)) {
                 if (entry.path().stem() == input) {
-                    string parent_path = entry.path().parent_path().string();
-                    string filename = entry.path().stem().string();
-                    return parent_path + "/" + filename;
+                    fs::path parent_path = entry.path().parent_path();
+                    fs::path filename = entry.path().stem();
+                    return (parent_path / filename).string();
                 }
             }
         }
     } catch (const exception &ex) {
-        cerr << ex.what() << endl;
+        cerr << "Exception in get_file_path: " << ex.what() << endl;
     }
     return "";
+}
+
+string join(vector<string> args, string sep) {
+    string res = "";
+    int n = args.size();
+    if (n == 0)
+        return res;
+    for (int i = 0; i < n - 1; i++) {
+        res += args[i] + sep;
+    }
+    res += args[n - 1];
+    return res;
 }
 
 string get_type(string command, char *directory_paths) {
@@ -225,4 +271,19 @@ void call_cat_cmd(string input_cmd) {
         cout << buffer;
     }
     _pclose(fp);
+}
+
+string process_exec_input(string cmd, vector<string> arguments) {
+    string p_input = cmd;
+    if (cmd.find(' ') != string::npos) {
+        if (cmd.find('"') != string::npos)
+            p_input = "'" + cmd + "'";
+        else
+            p_input = "\"" + cmd + "\"";
+    }
+
+    if (arguments.size() > 0)
+        p_input += " " + join(arguments, " ");
+
+    return p_input;
 }

@@ -18,6 +18,8 @@ int main() {
                 return 0;
 
             auto [cmd, arguments] = split_with_quotes(input);
+            // cout << "commmand: " << cmd << " " << cmd.size() << endl;
+            // cout << arguments.size() << endl;
 
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
@@ -84,17 +86,20 @@ int main() {
 
             // Check for executable files
             std::string file_path = get_file_path(directory_paths, cmd);
+            // cout << cmd << endl;
+            // cout << file_path << endl;
 
             if (file_path != "") {
                 // Execute the file
-                int output = system(input.c_str());
+                string processed_input = process_exec_input(cmd, arguments);
+                int output = system(processed_input.c_str());
                 continue;
             }
 
             std::cout << input << ": command not found" << std::endl;
         }
     } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Exception in main: " << e.what() << std::endl;
     }
 
     return 0;
