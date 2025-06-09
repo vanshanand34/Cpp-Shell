@@ -68,7 +68,6 @@ int main() {
                     int output = system(processed_input.c_str());
                     continue;
                 }
-
                 std::cout << input << ": command not found" << std::endl;
             }
         }

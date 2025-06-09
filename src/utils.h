@@ -9,8 +9,10 @@
 using namespace std;
 
 #ifdef _WIN32
+char file_sep = ';';
 #include <direct.h>
 #else
+char file_sep = ':';
 #include <unistd.h>
 #define _pclose pclose
 #define _popen popen
@@ -190,11 +192,9 @@ bool is_shell_builtin(string str) {
     return false;
 }
 
-string get_file_path(char *directory_paths, string input) {
+string get_file_path(char *directory_paths, string filename) {
     try {
-        string curr_path = "";
-        // cout << directory_paths << endl;
-        vector<string> paths = split_args(directory_paths, ':');
+        vector<string> paths = split_args(directory_paths, file_sep);
 
         for (string path : paths) {
 
@@ -202,7 +202,7 @@ string get_file_path(char *directory_paths, string input) {
                 continue;
 
             for (const auto &entry : fs::directory_iterator(path)) {
-                if (entry.path().stem() == input) {
+                if (entry.path().stem() == filename) {
                     fs::path parent_path = entry.path().parent_path();
                     fs::path filename = entry.path().stem();
                     return (parent_path / filename).string();
