@@ -9,8 +9,10 @@
 using namespace std;
 
 #ifdef _WIN32
+char file_sep = ';';
 #include <direct.h>
 #else
+char file_sep = ':';
 #include <unistd.h>
 #define _pclose pclose
 #define _popen popen
@@ -124,6 +126,9 @@ pair<string, vector<string>> split_with_quotes(string str) {
 
         if (str[i] == '\'') {
 
+            if (curr_arg.size() > 0)
+                arguments.push_back(curr_arg);
+            curr_arg = "";
             int closing_quote_idx = str.find('\'', i + 1);
 
             if (closing_quote_idx == string::npos) {
@@ -136,6 +141,10 @@ pair<string, vector<string>> split_with_quotes(string str) {
             i = closing_quote_idx;
 
         } else if (str[i] == '"') {
+
+            if (curr_arg.size() > 0)
+                arguments.push_back(curr_arg);
+            curr_arg = "";
 
             auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
 
@@ -183,11 +192,9 @@ bool is_shell_builtin(string str) {
     return false;
 }
 
-string get_file_path(char *directory_paths, string input) {
+string get_file_path(char *directory_paths, string filename) {
     try {
-        string curr_path = "";
-        // cout << directory_paths << endl;
-        vector<string> paths = split_args(directory_paths, ':');
+        vector<string> paths = split_args(directory_paths, file_sep);
 
         for (string path : paths) {
 
@@ -195,7 +202,7 @@ string get_file_path(char *directory_paths, string input) {
                 continue;
 
             for (const auto &entry : fs::directory_iterator(path)) {
-                if (entry.path().stem() == input) {
+                if (entry.path().stem() == filename) {
                     fs::path parent_path = entry.path().parent_path();
                     fs::path filename = entry.path().stem();
                     return (parent_path / filename).string();
@@ -220,21 +227,25 @@ string join(vector<string> args, string sep) {
     return res;
 }
 
-string get_type(string command, char *directory_paths) {
+void print_cmd_type(string command, char *directory_paths) {
     try {
         bool is_builtin = is_shell_builtin(command);
 
-        if (is_builtin)
-            return "builtin";
+        if (is_builtin) {
+            std::cout << command << " is a shell builtin" << std::endl;
+            return;
+        }
 
         string file_path = get_file_path(directory_paths, command);
-        return file_path == "" ? "invalid" : file_path;
+
+        if (file_path == "")
+            std::cout << command << ": not found" << std::endl;
+        else
+            std::cout << command << " is " << file_path << std::endl;
 
     } catch (const exception &e) {
         cerr << e.what() << endl;
     }
-
-    return "invalid";
 }
 
 void exec_cat_cmd(vector<string> file_names) {
