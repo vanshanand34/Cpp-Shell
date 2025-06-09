@@ -227,21 +227,25 @@ string join(vector<string> args, string sep) {
     return res;
 }
 
-string get_type(string command, char *directory_paths) {
+void print_cmd_type(string command, char *directory_paths) {
     try {
         bool is_builtin = is_shell_builtin(command);
 
-        if (is_builtin)
-            return "builtin";
+        if (is_builtin) {
+            std::cout << command << " is a shell builtin" << std::endl;
+            return;
+        }
 
         string file_path = get_file_path(directory_paths, command);
-        return file_path == "" ? "invalid" : file_path;
+
+        if (file_path == "")
+            std::cout << command << ": not found" << std::endl;
+        else
+            std::cout << command << " is " << file_path << std::endl;
 
     } catch (const exception &e) {
         cerr << e.what() << endl;
     }
-
-    return "invalid";
 }
 
 void exec_cat_cmd(vector<string> file_names) {
