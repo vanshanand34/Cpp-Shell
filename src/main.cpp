@@ -60,7 +60,6 @@ int main() {
                 call_cat_cmd(input);
 
             } else {
-
                 // Check for executable files
                 std::string file_path = get_file_path(directory_paths, cmd);
 
