@@ -57,7 +57,8 @@ int main() {
 
             } else if (cmd == "cat") {
 
-                call_cat_cmd(input);
+                // call_cat_cmd(input);
+                custom_cat_cmd(arguments);
 
             } else {
                 // Check for executable files

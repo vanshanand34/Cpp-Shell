@@ -284,6 +284,27 @@ void call_cat_cmd(string input_cmd) {
     _pclose(fp);
 }
 
+void custom_cat_cmd(vector<string> file_paths) {
+
+    for (string file_path : file_paths) {
+
+        if (file_path == " " || file_path == "")
+            continue;
+        string path_without_quotes = check_remove_quotes(file_path);
+        ifstream file;
+        file.open(path_without_quotes);
+        string chunk;
+
+        if (!file.is_open()) {
+            cerr << "error opening file : " << file_path << endl;
+            continue;
+        }
+
+        cout << file.rdbuf();
+        file.close();
+    }
+}
+
 string process_exec_input(string cmd, vector<string> arguments) {
     string p_input = cmd;
     if (cmd.find(' ') != string::npos) {
