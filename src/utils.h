@@ -248,41 +248,6 @@ void print_cmd_type(string command, char *directory_paths) {
     }
 }
 
-void exec_cat_cmd(vector<string> file_names) {
-    for (string &file_name : file_names) {
-
-        if (file_name == " " || file_name == "")
-            continue;
-
-        string cmd = "cat " + file_name;
-        FILE *fp = _popen(cmd.c_str(), "r");
-
-        if (fp == NULL) {
-            cerr << "error opening file : " << file_name << endl;
-            continue;
-        }
-
-        char buffer[256];
-        while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-            cout << buffer;
-        }
-        _pclose(fp);
-    }
-}
-
-void call_cat_cmd(string input_cmd) {
-    FILE *fp = _popen(input_cmd.c_str(), "r");
-    if (fp == NULL) {
-        cerr << "error opening file : " << input_cmd << endl;
-        return;
-    }
-
-    char buffer[256];
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        cout << buffer;
-    }
-    _pclose(fp);
-}
 
 void custom_cat_cmd(vector<string> file_paths) {
 
@@ -290,6 +255,7 @@ void custom_cat_cmd(vector<string> file_paths) {
 
         if (file_path == " " || file_path == "")
             continue;
+
         string path_without_quotes = check_remove_quotes(file_path);
         ifstream file;
         file.open(path_without_quotes);
@@ -303,6 +269,15 @@ void custom_cat_cmd(vector<string> file_paths) {
         cout << file.rdbuf();
         file.close();
     }
+}
+
+vector<string> remove_spaces(vector<string> args) {
+    vector<string> args_without_spaces;
+    for (string arg: args) {
+        if (arg != " " || arg!= "")
+            args_without_spaces.push_back(arg);
+    }
+    return args_without_spaces;
 }
 
 string process_exec_input(string cmd, vector<string> arguments) {

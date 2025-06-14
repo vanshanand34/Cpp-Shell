@@ -17,13 +17,14 @@ int main() {
             if (input.empty())
                 return 0;
 
-            auto [cmd, arguments] = split_with_quotes(input);
+            auto [cmd, echo_based_arguments] = split_with_quotes(input);
+            vector<string> arguments = remove_spaces(echo_based_arguments);
 
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
 
             if (cmd == "echo") {
-                for (std::string token : arguments) {
+                for (std::string token : echo_based_arguments) {
                     std::cout << check_remove_quotes(token);
                 }
                 std::cout << std::endl;
@@ -57,7 +58,6 @@ int main() {
 
             } else if (cmd == "cat") {
 
-                // call_cat_cmd(input);
                 custom_cat_cmd(arguments);
 
             } else {
