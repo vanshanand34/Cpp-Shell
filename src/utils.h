@@ -248,8 +248,47 @@ void print_cmd_type(string command, char *directory_paths) {
     }
 }
 
+vector<string> split_cat_args(string file_path_str) {
 
-void custom_cat_cmd(vector<string> file_paths) {
+    vector<string> file_paths;
+    string curr_path = "";
+
+    for (int i = 0; i < file_path_str.size(); i++) {
+
+        if (file_path_str[i] == '"' || file_path_str[i] == '\'') {
+            char quote_char = file_path_str[i];
+            int end_index = file_path_str.find(quote_char, i + 1);
+
+            if (end_index == string::npos) {
+                curr_path += file_path_str[i];
+                continue;
+            }
+
+            curr_path += file_path_str.substr(i + 1, end_index - i - 1);
+            file_paths.push_back(curr_path);
+            curr_path = "";
+            i = end_index;
+
+        } else if (file_path_str[i] == ' ') {
+            if (curr_path != "") {
+                file_paths.push_back(curr_path);
+                curr_path = "";
+            }
+
+        } else {
+            curr_path += file_path_str[i];
+        }
+    }
+    if (curr_path != "") {
+        file_paths.push_back(curr_path);
+    }
+    return file_paths;
+}
+
+
+void custom_cat_cmd(string file_path_str) {
+
+    vector<string> file_paths = split_cat_args(file_path_str);
 
     for (string file_path : file_paths) {
 
@@ -271,10 +310,11 @@ void custom_cat_cmd(vector<string> file_paths) {
     }
 }
 
+
 vector<string> remove_spaces(vector<string> args) {
     vector<string> args_without_spaces;
-    for (string arg: args) {
-        if (arg != " " || arg!= "")
+    for (string arg : args) {
+        if (arg != " " || arg != "")
             args_without_spaces.push_back(arg);
     }
     return args_without_spaces;
