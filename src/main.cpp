@@ -1,4 +1,14 @@
 #include "utils.h"
+#include <filesystem>
+#include <iostream>
+
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
+
+namespace fs = std::filesystem;
 
 int main() {
     try {
@@ -18,7 +28,8 @@ int main() {
                 return 0;
 
             auto [cmd, echo_based_arguments] = split_with_quotes(input);
-            vector<string> arguments = remove_spaces(echo_based_arguments);
+            std::vector<std::string> arguments =
+                remove_spaces(echo_based_arguments);
 
             if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
                 return 0;
@@ -65,7 +76,8 @@ int main() {
                 std::string file_path = get_file_path(directory_paths, cmd);
 
                 if (file_path != "") {
-                    string processed_input = process_exec_input(cmd, arguments);
+                    std::string processed_input =
+                        process_exec_input(cmd, arguments);
                     int output = system(processed_input.c_str());
                     continue;
                 }
