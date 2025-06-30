@@ -40,4 +40,6 @@ std::vector<std::string> remove_spaces(std::vector<std::string> args);
 std::string process_exec_input(std::string cmd,
                                std::vector<std::string> arguments);
 
+char* get_home_directory();
+
 #endif

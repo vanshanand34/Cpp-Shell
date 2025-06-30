@@ -17,7 +17,7 @@ int main() {
         std::cerr << std::unitbuf;
 
         char *directory_paths = getenv("PATH");
-        char *home_path = getenv("HOME");
+        char *home_path = get_home_directory();
         std::string input;
 
         while (true) {

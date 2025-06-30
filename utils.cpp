@@ -14,7 +14,7 @@ char file_sep = ':';
 #include <unistd.h>
 #endif
 
-namespace fs =  std::filesystem;
+namespace fs = std::filesystem;
 
 std::vector<std::string> split_args(std::string str, char delimiter) {
     std::stringstream ss(str);
@@ -193,7 +193,8 @@ bool is_shell_builtin(std::string str) {
 
 std::string get_file_path(char *directory_paths, std::string filename) {
     try {
-        std::vector<std::string> paths = split_args(std::string(directory_paths), file_sep);
+        std::vector<std::string> paths =
+            split_args(std::string(directory_paths), file_sep);
 
         for (std::string path : paths) {
 
@@ -331,4 +332,12 @@ std::string process_exec_input(std::string cmd,
         p_input += " " + join(arguments, " ");
 
     return p_input;
+}
+
+char* get_home_directory() {
+    #ifdef _WIN32
+        return getenv("USERPROFILE");
+    #else
+        return getenv("HOME");
+    #endif
 }
