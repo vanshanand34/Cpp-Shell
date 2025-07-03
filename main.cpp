@@ -17,7 +17,9 @@ int main() {
         std::cerr << std::unitbuf;
 
         char *directory_paths = getenv("PATH");
+
         char *home_path = get_home_directory();
+
         std::string input;
 
         while (true) {
@@ -54,12 +56,14 @@ int main() {
             } else if (cmd == "pwd") {
 
                 std::cout << fs::current_path().string() << std::endl;
+              
             }
             else if (cmd == "cd") {
 
                 if (arguments.size() < 1) {
                     continue;
                 }
+
                 std::string destination_dir = t.concat_args(false);
 
                 if (destination_dir._Starts_with("~")) {
@@ -73,7 +77,7 @@ int main() {
                 }
 
             } else if (cmd == "cat") {
-
+              
                 custom_cat_cmd(t.get_cat_args());
 
             } else {
