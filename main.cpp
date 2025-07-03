@@ -17,7 +17,9 @@ int main() {
         std::cerr << std::unitbuf;
 
         char *directory_paths = getenv("PATH");
+
         char *home_path = get_home_directory();
+
         std::string input;
 
         while (true) {
@@ -57,6 +59,7 @@ int main() {
                 if (arguments.size() < 1) {
                     continue;
                 }
+
                 std::string destination_dir = t.concat_args(false);
 
                 if (destination_dir._Starts_with("~")) {
