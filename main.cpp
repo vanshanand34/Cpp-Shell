@@ -17,7 +17,9 @@ int main() {
         std::cerr << std::unitbuf;
 
         char *directory_paths = getenv("PATH");
-        char *home_path = getenv("HOME");
+
+        char *home_path = get_home_directory();
+
         std::string input;
 
         while (true) {
@@ -27,16 +29,21 @@ int main() {
             if (input.empty())
                 return 0;
 
-            auto [cmd, echo_based_arguments] = split_with_quotes(input);
-            std::vector<std::string> arguments =
-                remove_spaces(echo_based_arguments);
+            Tokenizer t = Tokenizer(input);
+            std::vector<Token> arguments = t.get_tokens();
+            // for (auto tk : tokens) {
+            //     std::cout << tk.arg << " " << tk.has_space << std::endl;
+            // }
+            std::string cmd = t.command;
 
-            if (cmd == "exit" && arguments.size() == 1 && arguments[0] == "0")
+            if (cmd == "exit" && arguments.size() == 1 && arguments[0].arg == "0")
                 return 0;
 
             if (cmd == "echo") {
-                for (std::string token : echo_based_arguments) {
-                    std::cout << check_remove_quotes(token);
+                for (auto tk : arguments) {
+                    std::cout << check_remove_quotes(tk.arg);
+                    if (tk.has_space)
+                        std::cout << " ";
                 }
                 std::cout << std::endl;
 
@@ -44,21 +51,23 @@ int main() {
                 if (arguments.size() != 1) {
                     continue;
                 }
-                print_cmd_type(arguments[0], directory_paths);
+                print_cmd_type(arguments[0].arg, directory_paths);
 
             } else if (cmd == "pwd") {
 
                 std::cout << fs::current_path().string() << std::endl;
-
-            } else if (cmd == "cd") {
+              
+            }
+            else if (cmd == "cd") {
 
                 if (arguments.size() < 1) {
                     continue;
                 }
-                std::string destination_dir = input.substr(3);
 
-                if (destination_dir == "~") {
-                    destination_dir = home_path;
+                std::string destination_dir = t.concat_args(false);
+
+                if (destination_dir._Starts_with("~")) {
+                    destination_dir = home_path + destination_dir.substr(1);
                 }
                 int ans = chdir(destination_dir.c_str());
 
@@ -68,8 +77,8 @@ int main() {
                 }
 
             } else if (cmd == "cat") {
-
-                custom_cat_cmd(input.substr(4));
+              
+                custom_cat_cmd(t.get_cat_args());
 
             } else {
                 // Check for executable files

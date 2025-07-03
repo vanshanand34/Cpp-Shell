@@ -14,7 +14,98 @@ char file_sep = ':';
 #include <unistd.h>
 #endif
 
-namespace fs =  std::filesystem;
+namespace fs = std::filesystem;
+
+Token::Token(std::string arg, bool has_space = false) {
+    this->arg = arg;
+    this->has_space = has_space;
+    // arg stores the current argument
+    // has_space is used to check if the current argument is followed by a space
+    // or not so as to add a space after it in case of echo
+}
+
+void Token::set_has_space() { this->has_space = true; }
+
+Tokenizer::Tokenizer(std::string input) {
+    this->input = input;
+    this->count = 0;
+    this->generic_tokens = tokenize();
+}
+
+void Tokenizer::add_token(std::string &curr_arg, std::vector<Token> &tokens) {
+    if (curr_arg.empty())
+        return;
+    Token token = Token(curr_arg);
+    tokens.push_back(token);
+    curr_arg.clear();
+}
+
+std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
+    int n = this->input.size();
+    std::string curr_arg = "";
+    bool in_double_q = false, in_single_q = false;
+    std::vector<Token> tokens;
+
+    for (int i = 0; i < n; i++) {
+        if (!in_single_q && input[i] == '\\' && i == n - 1 &&
+            escape_backslashes)
+            throw new std::exception(
+                "Error: Expected escape character after \\");
+
+        if (in_single_q) {
+            curr_arg += input[i];
+            if (input[i] == '\'') {
+                add_token(curr_arg, tokens);
+                in_single_q = false;
+            }
+        } else if (in_double_q) {
+            if (input[i] == '\\' && escape_backslashes) {
+                curr_arg += input[++i];
+                continue;
+            }
+            curr_arg += input[i];
+            if (input[i] == '"') {
+                add_token(curr_arg, tokens);
+                in_double_q = false;
+            }
+        } else {
+            if (input[i] == ' ') {
+                add_token(curr_arg, tokens);
+                tokens.back().set_has_space();
+            } else if (input[i] == '\\') {
+                curr_arg += input[++i];
+            } else {
+                if (input[i] == '\'') {
+                    in_single_q = true;
+                    add_token(curr_arg, tokens);
+                } else if (input[i] == '"') {
+                    in_double_q = true;
+                    add_token(curr_arg, tokens);
+                }
+                curr_arg += input[i];
+            }
+        }
+    }
+    if (curr_arg != "")
+        add_token(curr_arg, tokens);
+    this->command = tokens[0].arg;
+    tokens.erase(tokens.begin());
+    return tokens;
+}
+
+std::vector<Token> Tokenizer::get_tokens() { return generic_tokens; }
+
+std::string Tokenizer::concat_args(bool add_space = false) {
+    std::string res = "";
+    for (auto tk : this->generic_tokens) {
+        res += tk.arg;
+        if (add_space)
+            res += (tk.has_space ? " " : "");
+    }
+    return res;
+}
+
+std::vector<Token> Tokenizer::get_cat_args() { return tokenize(false); }
 
 std::vector<std::string> split_args(std::string str, char delimiter) {
     std::stringstream ss(str);
@@ -34,154 +125,6 @@ std::string check_remove_quotes(std::string &token) {
     return token;
 }
 
-std::pair<int, std::string> process_double_q_str(std::string &raw_str,
-                                                 int index, int n) {
-
-    std::string processed_str = "\"";
-
-    for (int i = index + 1; i < n; i++) {
-
-        if (i < n - 1 && raw_str[i] == '\\') {
-            processed_str += raw_str[++i];
-        } else if (raw_str[i] == '\'') {
-
-            size_t single_q_end = raw_str.find('\'', i + 1);
-
-            if (single_q_end == std::string::npos) {
-                processed_str += raw_str[i];
-                continue;
-            }
-            std::string single_q_str = raw_str.substr(i, single_q_end - i + 1);
-            processed_str += single_q_str;
-            i = single_q_end;
-
-        } else if (raw_str[i] == '"') {
-            return {i, processed_str + '"'};
-        } else {
-            processed_str += raw_str[i];
-        }
-    }
-    return {-1, ""};
-}
-
-void push_argument(std::string &curr_arg, std::string &str,
-                   std::vector<std::string> &arguments, int &closing_index,
-                   int n) {
-
-    arguments.push_back(curr_arg);
-
-    if (closing_index < n - 1 && str[closing_index + 1] == ' ')
-        arguments.push_back(" ");
-
-    curr_arg = "";
-}
-
-std::string get_command(std::string &input) {
-    std::string cmd = "";
-    int closing_idx = 0;
-
-    if (input[0] == ' ') {
-        int idx = 0;
-        while (idx < input.size() && input[idx] == ' ')
-            idx++;
-        input = input.substr(idx);
-    }
-
-    int n = input.size();
-
-    if (input[0] == '\'' || input[0] == '"') {
-        closing_idx = input.find(input[0], 1);
-        if (closing_idx == std::string::npos) {
-            cmd = input;
-            input = "";
-            return cmd;
-        }
-
-        cmd = input.substr(1, closing_idx - 1);
-        // if (cmd.find(' ') != std::string::npos)
-        input = input.substr(closing_idx + 1);
-    } else {
-        closing_idx = input.find(' ');
-        if (closing_idx == std::string::npos) {
-            cmd = input;
-            input = "";
-            return cmd;
-        }
-        cmd = input.substr(0, closing_idx);
-        input = input.substr(closing_idx + 1);
-    }
-
-    return cmd;
-}
-
-std::pair<std::string, std::vector<std::string>>
-split_with_quotes(std::string str) {
-    std::vector<std::string> arguments;
-    std::string command = get_command(str);
-    int n = str.size();
-    std::string curr_arg = "";
-
-    for (int i = 0; i < n; i++) {
-
-        if (str[i] == '\'') {
-
-            if (curr_arg.size() > 0)
-                arguments.push_back(curr_arg);
-            curr_arg = "";
-            int closing_quote_idx = str.find('\'', i + 1);
-
-            if (closing_quote_idx == std::string::npos) {
-                curr_arg += str[i];
-                continue;
-            }
-
-            curr_arg += str.substr(i, closing_quote_idx - i + 1);
-            push_argument(curr_arg, str, arguments, closing_quote_idx, n);
-            i = closing_quote_idx;
-
-        } else if (str[i] == '"') {
-
-            if (curr_arg.size() > 0)
-                arguments.push_back(curr_arg);
-            curr_arg = "";
-
-            auto [closing_idx, processed_str] = process_double_q_str(str, i, n);
-
-            if (closing_idx == -1) {
-                curr_arg += str[i];
-                continue;
-            }
-
-            push_argument(processed_str, str, arguments, closing_idx, n);
-
-            i = closing_idx;
-            curr_arg = "";
-
-        } else if (str[i] == ' ') {
-
-            if (curr_arg == "")
-                continue;
-
-            arguments.push_back(curr_arg);
-
-            if (i < n - 1)
-                arguments.push_back(" ");
-
-            curr_arg = "";
-
-        } else if (str[i] == '\\') {
-            curr_arg += str[++i];
-        } else {
-            curr_arg += str[i];
-        }
-    }
-
-    if (curr_arg != "")
-        arguments.push_back(curr_arg);
-
-    return {command, arguments};
-}
-
 bool is_shell_builtin(std::string str) {
     std::string builtin_commands[] = {"pwd", "cd", "type", "exit", "echo"};
     for (std::string command : builtin_commands) {
@@ -193,7 +136,8 @@ bool is_shell_builtin(std::string str) {
 
 std::string get_file_path(char *directory_paths, std::string filename) {
     try {
-        std::vector<std::string> paths = split_args(std::string(directory_paths), file_sep);
+        std::vector<std::string> paths =
+            split_args(std::string(directory_paths), file_sep);
 
         for (std::string path : paths) {
 
@@ -214,15 +158,15 @@ std::string get_file_path(char *directory_paths, std::string filename) {
     return "";
 }
 
-std::string join(std::vector<std::string> args, std::string sep) {
+std::string join(std::vector<Token> args, std::string sep) {
     std::string res = "";
     int n = args.size();
     if (n == 0)
         return res;
     for (int i = 0; i < n - 1; i++) {
-        res += args[i] + sep;
+        res += args[i].arg + sep;
     }
-    res += args[n - 1];
+    res += args[n - 1].arg;
     return res;
 }
 
@@ -247,78 +191,35 @@ void print_cmd_type(std::string command, char *directory_paths) {
     }
 }
 
-std::vector<std::string> split_cat_args(std::string file_path_str) {
+void custom_cat_cmd(std::vector<Token> args) {
 
-    std::vector<std::string> file_paths;
-    std::string curr_path = "";
+    for (auto file_path : args) {
 
-    for (int i = 0; i < file_path_str.size(); i++) {
+        try {
 
-        if (file_path_str[i] == '"' || file_path_str[i] == '\'') {
-            char quote_char = file_path_str[i];
-            int end_index = file_path_str.find(quote_char, i + 1);
+            if (file_path.arg == " " || file_path.arg == "")
+                continue;
 
-            if (end_index == std::string::npos) {
-                curr_path += file_path_str[i];
+            std::string path = check_remove_quotes(file_path.arg);
+            std::ifstream file;
+            file.open(path);
+
+            if (!file.is_open()) {
+                std::cerr << "Error opening file : " << file_path.arg
+                          << std::endl;
                 continue;
             }
 
-            curr_path += file_path_str.substr(i + 1, end_index - i - 1);
-            file_paths.push_back(curr_path);
-            curr_path = "";
-            i = end_index;
-
-        } else if (file_path_str[i] == ' ') {
-            if (curr_path != "") {
-                file_paths.push_back(curr_path);
-                curr_path = "";
-            }
-
-        } else {
-            curr_path += file_path_str[i];
+            std::cout << file.rdbuf();
+            file.close();
+        } catch (const std::exception &e) {
+            std::cerr << "Exception in custom_cat_cmd: " << e.what()
+                      << std::endl;
         }
     }
-    if (curr_path != "") {
-        file_paths.push_back(curr_path);
-    }
-    return file_paths;
 }
 
-void custom_cat_cmd(std::string file_path_str) {
-
-    std::vector<std::string> file_paths = split_cat_args(file_path_str);
-
-    for (std::string file_path : file_paths) {
-
-        if (file_path == " " || file_path == "")
-            continue;
-
-        std::string path_without_quotes = check_remove_quotes(file_path);
-        std::ifstream file;
-        file.open(path_without_quotes);
-        std::string chunk;
-
-        if (!file.is_open()) {
-            std::cerr << "error opening file : " << file_path << std::endl;
-            continue;
-        }
-
-        std::cout << file.rdbuf();
-        file.close();
-    }
-}
-
-std::vector<std::string> remove_spaces(std::vector<std::string> args) {
-    std::vector<std::string> args_without_spaces;
-    for (std::string arg : args) {
-        if (arg != " " || arg != "")
-            args_without_spaces.push_back(arg);
-    }
-    return args_without_spaces;
-}
-
-std::string process_exec_input(std::string cmd,
-                               std::vector<std::string> arguments) {
+std::string process_exec_input(std::string cmd, std::vector<Token> arguments) {
     std::string p_input = cmd;
     if (cmd.find(' ') != std::string::npos) {
         if (cmd.find('"') != std::string::npos)
@@ -331,4 +232,12 @@ std::string process_exec_input(std::string cmd,
         p_input += " " + join(arguments, " ");
 
     return p_input;
+}
+
+char *get_home_directory() {
+#ifdef _WIN32
+    return getenv("USERPROFILE");
+#else
+    return getenv("HOME");
+#endif
 }
