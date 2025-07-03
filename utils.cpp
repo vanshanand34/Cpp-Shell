@@ -16,12 +16,13 @@ char file_sep = ':';
 
 namespace fs = std::filesystem;
 
-Token::Token(std::string arg, bool has_space = false) {
-    this->arg = arg;
-    this->has_space = has_space;
+Token::Token(std::string arg, int quote_type) {
     // arg stores the current argument
+    this->value = arg;
     // has_space is used to check if the current argument is followed by a space
-    // or not so as to add a space after it in case of echo
+    this->has_space = false;
+    // quote_type is used to check if the current argument is quoted or not
+    this->quote_type = quote_type;
 }
 
 void Token::set_has_space() { this->has_space = true; }
@@ -32,10 +33,17 @@ Tokenizer::Tokenizer(std::string input) {
     this->generic_tokens = tokenize();
 }
 
-void Tokenizer::add_token(std::string &curr_arg, std::vector<Token> &tokens) {
+std::string Token::get_without_quotes() {
+    if (this->quote_type == 0)
+        return this->value;
+    return this->value.substr(1, this->value.size() - 2);
+}
+
+void Tokenizer::add_token(std::string &curr_arg, std::vector<Token> &tokens,
+                          int quote_type) {
     if (curr_arg.empty())
         return;
-    Token token = Token(curr_arg);
+    Token token = Token(curr_arg, quote_type);
     tokens.push_back(token);
     curr_arg.clear();
 }
@@ -55,7 +63,7 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
         if (in_single_q) {
             curr_arg += input[i];
             if (input[i] == '\'') {
-                add_token(curr_arg, tokens);
+                add_token(curr_arg, tokens, 1);
                 in_single_q = false;
             }
         } else if (in_double_q) {
@@ -65,7 +73,7 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
             }
             curr_arg += input[i];
             if (input[i] == '"') {
-                add_token(curr_arg, tokens);
+                add_token(curr_arg, tokens, 2);
                 in_double_q = false;
             }
         } else {
@@ -88,7 +96,8 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
     }
     if (curr_arg != "")
         add_token(curr_arg, tokens);
-    this->command = tokens[0].arg;
+
+    this->command = tokens[0];
     tokens.erase(tokens.begin());
     return tokens;
 }
@@ -98,7 +107,7 @@ std::vector<Token> Tokenizer::get_tokens() { return generic_tokens; }
 std::string Tokenizer::concat_args(bool add_space = false) {
     std::string res = "";
     for (auto tk : this->generic_tokens) {
-        res += tk.arg;
+        res += tk.value;
         if (add_space)
             res += (tk.has_space ? " " : "");
     }
@@ -118,12 +127,6 @@ std::vector<std::string> split_args(std::string str, char delimiter) {
     return tokens;
 }
 
-std::string check_remove_quotes(std::string &token) {
-    if (token.size() > 1 && token[token.size() - 1] == token[0] &&
-        (token[0] == '\'' || token[0] == '"'))
-        return token.substr(1, token.size() - 2);
-    return token;
-}
 
 bool is_shell_builtin(std::string str) {
     std::string builtin_commands[] = {"pwd", "cd", "type", "exit", "echo"};
@@ -136,19 +139,22 @@ bool is_shell_builtin(std::string str) {
 
 std::string get_file_path(char *directory_paths, std::string filename) {
     try {
+
+        std::vector<std::string> extensions = {".exe", ".sh", ".bat", ".cmd"};
+
         std::vector<std::string> paths =
             split_args(std::string(directory_paths), file_sep);
 
-        for (std::string path : paths) {
+        for (auto &path : paths) {
 
             if (!fs::exists(path))
                 continue;
 
-            for (const auto &entry : fs::directory_iterator(path)) {
-                if (entry.path().stem() == filename) {
-                    fs::path parent_path = entry.path().parent_path();
-                    fs::path filename = entry.path().stem();
-                    return (parent_path / filename).string();
+            fs::path prog_path = fs::path(path) / filename;
+
+            for (auto &ext : extensions) {
+                if (fs::exists(prog_path.string() + ext)) {
+                    return prog_path.string() + ext;
                 }
             }
         }
@@ -164,9 +170,9 @@ std::string join(std::vector<Token> args, std::string sep) {
     if (n == 0)
         return res;
     for (int i = 0; i < n - 1; i++) {
-        res += args[i].arg + sep;
+        res += args[i].value + sep;
     }
-    res += args[n - 1].arg;
+    res += args[n - 1].value;
     return res;
 }
 
@@ -197,16 +203,15 @@ void custom_cat_cmd(std::vector<Token> args) {
 
         try {
 
-            if (file_path.arg == " " || file_path.arg == "")
+            if (file_path.value == " " || file_path.value == "")
                 continue;
 
-            std::string path = check_remove_quotes(file_path.arg);
+            std::string path = file_path.get_without_quotes();
             std::ifstream file;
             file.open(path);
 
             if (!file.is_open()) {
-                std::cerr << "Error opening file : " << file_path.arg
-                          << std::endl;
+                std::cerr << "Error opening file : " << path << std::endl;
                 continue;
             }
 

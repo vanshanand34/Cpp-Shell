@@ -29,33 +29,30 @@ int main() {
 
             Tokenizer t = Tokenizer(input);
             std::vector<Token> arguments = t.get_tokens();
-            // for (auto tk : tokens) {
-            //     std::cout << tk.arg << " " << tk.has_space << std::endl;
-            // }
-            std::string cmd = t.command;
+            Token cmd = t.command;
 
-            if (cmd == "exit" && arguments.size() == 1 && arguments[0].arg == "0")
-                return 0;
+            if (cmd.value == "exit" && arguments.size() == 1)
+                return arguments[0].value == "0" ? 0 : 1;
 
-            if (cmd == "echo") {
+            if (cmd.value == "echo") {
                 for (auto tk : arguments) {
-                    std::cout << check_remove_quotes(tk.arg);
+                    std::cout << tk.get_without_quotes();
                     if (tk.has_space)
                         std::cout << " ";
                 }
                 std::cout << std::endl;
 
-            } else if (cmd == "type") {
+            } else if (cmd.value == "type") {
                 if (arguments.size() != 1) {
                     continue;
                 }
-                print_cmd_type(arguments[0].arg, directory_paths);
+                print_cmd_type(arguments[0].value, directory_paths);
 
-            } else if (cmd == "pwd") {
+            } else if (cmd.value == "pwd") {
 
                 std::cout << fs::current_path().string() << std::endl;
-            }
-            else if (cmd == "cd") {
+
+            } else if (cmd.value == "cd") {
 
                 if (arguments.size() < 1) {
                     continue;
@@ -72,17 +69,18 @@ int main() {
                               << ": No such file or directory" << std::endl;
                 }
 
-            } else if (cmd == "cat") {
+            } else if (cmd.value == "cat") {
 
                 custom_cat_cmd(t.get_cat_args());
 
             } else {
                 // Check for executable files
-                std::string file_path = get_file_path(directory_paths, cmd);
+                std::string file_path =
+                    get_file_path(directory_paths, cmd.get_without_quotes());
 
                 if (file_path != "") {
                     std::string processed_input =
-                        process_exec_input(cmd, arguments);
+                        process_exec_input(file_path, arguments);
                     int output = system(processed_input.c_str());
                     continue;
                 }

@@ -7,11 +7,14 @@
 
 class Token {
   public:
-    std::string arg;
+    std::string value;
     bool has_space;
+    int quote_type;
 
-    Token(std::string arg, bool has_space);
+    Token() : value(""), has_space(false), quote_type(0) {}
+    Token(std::string arg, int quote_type = 0);
     void set_has_space();
+    std::string get_without_quotes();
 };
 
 // Full definition of Tokenizer
@@ -21,10 +24,11 @@ class Tokenizer {
     int count;
 
     std::vector<Token> tokenize(bool escape_backslash = true);
-    void add_token(std::string &curr_arg, std::vector<Token> &tokens);
+    void add_token(std::string &curr_arg, std::vector<Token> &tokens,
+                   int quote_type = 0);
 
   public:
-    std::string command;
+    Token command;
     Tokenizer(std::string input);
     std::vector<Token> get_tokens();
     std::vector<Token> get_cat_args();
@@ -32,8 +36,6 @@ class Tokenizer {
 };
 
 std::vector<std::string> split_args(std::string str, char delimiter);
-
-std::string check_remove_quotes(std::string &token);
 
 bool is_shell_builtin(std::string str);
 
