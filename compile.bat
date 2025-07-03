@@ -1,0 +1,1 @@
+cl /std:c++17 /EHsc main.cpp utils.cpp
