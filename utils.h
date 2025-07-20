@@ -52,5 +52,7 @@ std::string process_exec_input(std::string cmd, std::vector<Token> arguments);
 char *get_home_directory();
 
 int execute_cmd(const char * str);
+int execute_cmd_windows(const char * str);
+int execute_cmd_linux(const char * str);
 
 #endif
