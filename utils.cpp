@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stack>
 #include <stdio.h>
+#include <windows.h>
 
 #ifdef _WIN32
 char file_sep = ';';
@@ -127,7 +128,6 @@ std::vector<std::string> split_args(std::string str, char delimiter) {
     return tokens;
 }
 
-
 bool is_shell_builtin(std::string str) {
     std::string builtin_commands[] = {"pwd", "cd", "type", "exit", "echo"};
     for (std::string command : builtin_commands) {
@@ -154,7 +154,7 @@ std::string get_file_path(char *directory_paths, std::string filename) {
 
             for (auto &ext : extensions) {
                 if (fs::exists(prog_path.string() + ext)) {
-                    return prog_path.string() + ext;
+                    return prog_path.lexically_normal().string() + ext;
                 }
             }
         }
@@ -197,6 +197,10 @@ void print_cmd_type(std::string command, char *directory_paths) {
     }
 }
 
+/**
+ * Custom cat command that handles quoted and unquoted file paths
+ * Created this because cat command only works on linux/unix based systems
+ */
 void custom_cat_cmd(std::vector<Token> args) {
 
     for (auto file_path : args) {
@@ -245,4 +249,39 @@ char *get_home_directory() {
 #else
     return getenv("HOME");
 #endif
+}
+
+int execute_cmd(const char * cmd) {
+
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+
+    // Start the child process.
+    if (!CreateProcess(
+        NULL,           // No module name (use command line)
+        (LPTSTR)(cmd),  // Command line
+        NULL,           // Process handle not inheritable
+        NULL,           // Thread handle not inheritable
+        FALSE,          // Set handle inheritance to FALSE
+        0,              // No creation flags
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory 
+        &si,            // Pointer to STARTUPINFO structure
+        &pi             // Pointer to PROCESS_INFORMATION structure
+    )) {
+        std::cerr << "CreateProcess failed (" << GetLastError() << ").\n";
+        return 0;
+    }
+
+    // Wait until child process exits.
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    // Close process and thread handles.
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return 1;
 }
