@@ -84,7 +84,12 @@ int main() {
                 if (file_path != "") {
                     std::string processed_input =
                         process_exec_input(file_path, arguments);
-                    int output = system(processed_input.c_str());
+
+                    int output = execute_cmd(processed_input.c_str());
+
+                    if (output != 1) {
+                        std::cerr << "Error executing command" << std::endl;
+                    }
                     continue;
                 }
                 std::cout << input << ": command not found" << std::endl;
