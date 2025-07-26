@@ -5,16 +5,20 @@
 #include <iostream>
 #include <stack>
 #include <stdio.h>
+#include <windows.h>
 
 #ifdef _WIN32
 char file_sep = ';';
 #include <direct.h>
 #else
 char file_sep = ':';
+#include <sys/wait.h>
 #include <unistd.h>
 #endif
 
 namespace fs = std::filesystem;
+
+int MAX_HISTORY_LIMIT = 20;
 
 Token::Token(std::string arg, int quote_type) {
     // arg stores the current argument
@@ -54,7 +58,10 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
     bool in_double_q = false, in_single_q = false;
     std::vector<Token> tokens;
 
-    for (int i = 0; i < n; i++) {
+    int i = 0;
+    while (i < n && input[i] == ' ') i++;
+
+    for (i; i < n; i++) {
         if (!in_single_q && input[i] == '\\' && i == n - 1 &&
             escape_backslashes)
             throw new std::exception(
@@ -127,7 +134,6 @@ std::vector<std::string> split_args(std::string str, char delimiter) {
     return tokens;
 }
 
-
 bool is_shell_builtin(std::string str) {
     std::string builtin_commands[] = {"pwd", "cd", "type", "exit", "echo"};
     for (std::string command : builtin_commands) {
@@ -154,7 +160,7 @@ std::string get_file_path(char *directory_paths, std::string filename) {
 
             for (auto &ext : extensions) {
                 if (fs::exists(prog_path.string() + ext)) {
-                    return prog_path.string() + ext;
+                    return prog_path.lexically_normal().string() + ext;
                 }
             }
         }
@@ -197,6 +203,10 @@ void print_cmd_type(std::string command, char *directory_paths) {
     }
 }
 
+/**
+ * Custom cat command that handles quoted and unquoted file paths
+ * Created this because cat command only works on linux/unix based systems
+ */
 void custom_cat_cmd(std::vector<Token> args) {
 
     for (auto file_path : args) {
@@ -246,3 +256,17 @@ char *get_home_directory() {
     return getenv("HOME");
 #endif
 }
+
+void add_to_history(std::string command, std::vector<std::string> &history) {
+    if (history.size() >= MAX_HISTORY_LIMIT) {
+        history.erase(history.begin());
+    }
+    history.push_back(command);
+}
+
+void print_history(std::vector<std::string> history) {
+    for (int i = 0; i < history.size(); i++) {
+        std::cout << "     " << i << "  " << history[i] << std::endl;
+    }
+}
+
