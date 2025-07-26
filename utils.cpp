@@ -58,7 +58,10 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
     bool in_double_q = false, in_single_q = false;
     std::vector<Token> tokens;
 
-    for (int i = 0; i < n; i++) {
+    int i = 0;
+    while (i < n && input[i] == ' ') i++;
+
+    for (i; i < n; i++) {
         if (!in_single_q && input[i] == '\\' && i == n - 1 &&
             escape_backslashes)
             throw new std::exception(
