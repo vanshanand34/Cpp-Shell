@@ -1,1 +1,1 @@
-cl /std:c++17 /EHsc main.cpp utils.cpp
+cl /std:c++17 /EHsc main.cpp utils.cpp platform/execute_cmd.cpp

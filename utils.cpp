@@ -18,6 +18,8 @@ char file_sep = ':';
 
 namespace fs = std::filesystem;
 
+int MAX_HISTORY_LIMIT = 20;
+
 Token::Token(std::string arg, int quote_type) {
     // arg stores the current argument
     this->value = arg;
@@ -252,65 +254,16 @@ char *get_home_directory() {
 #endif
 }
 
-int execute_cmd_linux(const char *cmd) {
-#ifdef _WIN32
-    return 0;
-#else
-    pid_t pid = fork();
-    if (pid < 0) {
-        std::cout << "Fork failed" << std::endl;
-    } else if (pid == 0) {
-        int output = execv(cmd, NULL);
-        if (output == -1) {
-            std::cout << "Error executing command : " << cmd << std::endl;
-        }
-        return 1;
-    } else {
-        waitpid(pid, NULL, 0);
-        return 0;
+void add_to_history(std::string command, std::vector<std::string> &history) {
+    if (history.size() >= MAX_HISTORY_LIMIT) {
+        history.erase(history.begin());
     }
-    return 0;
-#endif
+    history.push_back(command);
 }
 
-int execute_cmd(const char *cmd) {
-
-#ifdef _WIN32
-    return execute_cmd_windows(cmd);
-#else
-    return execute_cmd_linux(cmd);
-#endif
-}
-
-int execute_cmd_windows(const char *cmd) {
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
-
-    // Start the child process.
-    if (!CreateProcess(NULL,          // No module name (use command line)
-                       (LPTSTR)(cmd), // Command line
-                       NULL,          // Process handle not inheritable
-                       NULL,          // Thread handle not inheritable
-                       FALSE,         // Set handle inheritance to FALSE
-                       0,             // No creation flags
-                       NULL,          // Use parent's environment block
-                       NULL,          // Use parent's starting directory
-                       &si,           // Pointer to STARTUPINFO structure
-                       &pi // Pointer to PROCESS_INFORMATION structure
-                       )) {
-        std::cerr << "CreateProcess failed (" << GetLastError() << ").\n";
-        return 0;
+void print_history(std::vector<std::string> history) {
+    for (int i = 0; i < history.size(); i++) {
+        std::cout << "     " << i << "  " << history[i] << std::endl;
     }
-
-    // Wait until child process exits.
-    WaitForSingleObject(pi.hProcess, INFINITE);
-
-    // Close process and thread handles.
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-    return 1;
 }
+

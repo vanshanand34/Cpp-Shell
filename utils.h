@@ -51,8 +51,9 @@ std::string process_exec_input(std::string cmd, std::vector<Token> arguments);
 
 char *get_home_directory();
 
-int execute_cmd(const char * str);
-int execute_cmd_windows(const char * str);
-int execute_cmd_linux(const char * str);
+void add_to_history(std::string command, std::vector<std::string> &history);
+
+void print_history(std::vector<std::string> history);
+
 
 #endif
