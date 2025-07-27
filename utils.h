@@ -55,5 +55,6 @@ void add_to_history(std::string command, std::vector<std::string> &history);
 
 void print_history(std::vector<std::string> history);
 
+void clear_screen();
 
 #endif

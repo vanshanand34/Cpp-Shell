@@ -10,8 +10,6 @@
 #endif
 
 
-#define CLEAR_SCREEN "\033[H\033[J"
-
 namespace fs = std::filesystem;
 
 int main() {
@@ -26,6 +24,7 @@ int main() {
 
         std::string input;
         std::cout << std::endl;
+
         while (true) {
             std::cout << "$ ";
             std::getline(std::cin, input);
@@ -88,8 +87,8 @@ int main() {
                 print_history(history);
 
             } else if (cmd.value == "clear") {
-                
-                std::cout << CLEAR_SCREEN;
+
+                clear_screen();
 
             } else {
                 // Check for executable files
