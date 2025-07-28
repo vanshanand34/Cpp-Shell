@@ -59,7 +59,8 @@ std::vector<Token> Tokenizer::tokenize(bool escape_backslashes) {
     std::vector<Token> tokens;
 
     int i = 0;
-    while (i < n && input[i] == ' ') i++;
+    while (i < n && input[i] == ' ')
+        i++;
 
     for (i; i < n; i++) {
         if (!in_single_q && input[i] == '\\' && i == n - 1 &&
@@ -266,7 +267,13 @@ void add_to_history(std::string command, std::vector<std::string> &history) {
 
 void print_history(std::vector<std::string> history) {
     for (int i = 0; i < history.size(); i++) {
-        std::cout << "     " << i << "  " << history[i] << std::endl;
+        std::cout << "     " << i + 1 << "  " << history[i] << std::endl;
     }
 }
 
+void clear_screen() {
+    std::cout << "\033[2J"; // Clear entire screen
+    std::cout << "\033[3J"; // Clear scrollback buffer
+    std::cout << "\033[H";  // Move cursor to home position
+    std::cout << std::flush;
+}

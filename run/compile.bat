@@ -1,0 +1,1 @@
+cl /std:c++17 /EHsc /Fo"./obj"\ /Fe"./exe"\ main.cpp utils.cpp platform/execute_cmd.cpp
