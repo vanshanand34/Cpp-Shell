@@ -144,6 +144,32 @@ bool is_shell_builtin(std::string str) {
     return false;
 }
 
+/**
+ * @brief Add the current working directory to the PATH environment variable.
+ *
+ * This function modifies the PATH environment variable to include the
+ * current working directory. This allows the shell to execute executables
+ * in the current working directory without requiring the full path.
+ *
+ * @note This function uses the `_putenv` function on Windows and the
+ * `setenv` function on POSIX systems (Linux, macOS, etc.).
+ */
+void setEnvPath() {
+    // add present path to terminal path env varaible
+    char *curr_path = std::getenv("PATH");
+    std::string modified_path =
+        std::string(curr_path) + file_sep + fs::current_path().string();
+
+#ifdef _WIN32
+    if (_putenv_s("PATH", modified_path.c_str()) != 0) {
+        std::cerr << "Unable to set terminal PATH!" << std::endl;
+    } // Windows
+#else
+    setenv("PATH", modified_path.c_str(), 1);
+    // POSIX (Linux, macOS, etc.), '1' means overwrite
+#endif
+}
+
 std::string get_file_path(char *directory_paths, std::string filename) {
     try {
 
