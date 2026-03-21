@@ -9,6 +9,9 @@
 #include <unistd.h>
 #endif
 
+#define MAGENTA "\u001b[35m"
+#define RESET "\u001b[0m"
+
 namespace fs = std::filesystem;
 
 int main() {
@@ -16,9 +19,6 @@ int main() {
         // Flush after every std::cout / std:cerr
         std::cout << std::unitbuf;
         std::cerr << std::unitbuf;
-
-        // add current path to env
-        setEnvPath();
 
         char *directory_paths = std::getenv("PATH");
         char *home_path = get_home_directory();
@@ -28,7 +28,7 @@ int main() {
         std::cout << std::endl;
 
         while (true) {
-            std::cout << "$ ";
+            std::cout << MAGENTA << "$ " << RESET;
 
             std::getline(std::cin, input);
             add_to_history(input, history);
