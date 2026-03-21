@@ -9,7 +9,6 @@
 #include <unistd.h>
 #endif
 
-
 namespace fs = std::filesystem;
 
 int main() {
@@ -18,7 +17,10 @@ int main() {
         std::cout << std::unitbuf;
         std::cerr << std::unitbuf;
 
-        char *directory_paths = getenv("PATH");
+        // add current path to env
+        setEnvPath();
+
+        char *directory_paths = std::getenv("PATH");
         char *home_path = get_home_directory();
         std::vector<std::string> history;
 
@@ -27,6 +29,7 @@ int main() {
 
         while (true) {
             std::cout << "$ ";
+
             std::getline(std::cin, input);
             add_to_history(input, history);
 

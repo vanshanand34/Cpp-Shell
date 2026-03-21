@@ -57,4 +57,6 @@ void print_history(std::vector<std::string> history);
 
 void clear_screen();
 
+void setEnvPath();
+
 #endif
